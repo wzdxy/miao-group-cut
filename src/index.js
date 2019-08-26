@@ -24,6 +24,11 @@ window.vm = new Vue({
     outputPicList: [],// 处理后的图片
     dragging: false,
     resizing: false,
+    resizingPosition: 1,
+    resizeStart: {
+      x: 0,
+      y: 0
+    },
     cutBox: {
       x: 0,
       y: 0,
@@ -60,7 +65,35 @@ window.vm = new Vue({
         console.log(this.cutBox.x, this.cutBox.y)
       } else if (this.resizing) {
         e.preventDefault()
-        console.log(e)
+        const changeX = e.x - this.resizeStart.x
+        const changeY = e.y - this.resizeStart.y
+        switch(this.resizingPosition) {
+          case 1: {
+            this.cutBox.x += changeX
+            this.cutBox.y += changeY
+            this.cutBox.w -= changeX
+            this.cutBox.h -= changeY
+            break
+          }
+          case 2: {
+            this.cutBox.y += changeY
+            this.cutBox.w += changeX
+            this.cutBox.h -= changeY
+            break
+          }
+          case 3: {
+            this.cutBox.w = this.cutBox.w + changeX
+            this.cutBox.h = this.cutBox.h + changeY
+            break
+          }
+          case 4: {
+            this.cutBox.x += changeX
+            this.cutBox.w -= changeX
+            this.cutBox.h += changeY
+          }
+        }
+        this.resizeStart.x = e.x
+        this.resizeStart.y = e.y
       }
     },
     stopDrag() {
@@ -82,7 +115,10 @@ window.vm = new Vue({
       e.stopPropagation()
       window.addEventListener('mouseup', this.stopResizing)
       this.resizing = true
-      console.log('开始调整', position)
+      this.resizingPosition = position
+      this.resizeStart.x = e.x
+      this.resizeStart.y = e.y
+      console.log('开始调整', e.x, e.y)
     }
   },
   mounted() {
