@@ -7,14 +7,16 @@ let win
 function createWindow () {
   // 创建浏览器窗口。
   win = new BrowserWindow({
-    width: 1600,
-    height: 800,
+    width: 800,
+    height: 600,
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false
-    }
+    },
+    show: false
   })
-
+  win.maximize()
+  win.show()
   // 加载index.html文件
   win.loadFile('src/index.html')
 

@@ -1,5 +1,5 @@
 {
-  "name": "miao-group-cut",
+  "name": "miao-cut",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
@@ -10,10 +10,14 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.wzdxy.miao_cut"
+    "appId": "com.wzdxy.miaocut",
+    "productName": "Miao Cut",
+    "win": {
+      "icon": "icon.png"
+    }
   },
   "keywords": [],
-  "author": "",
+  "author": "wzdxy",
   "license": "ISC",
   "dependencies": {
     "@shopify/draggable": "^1.0.0-beta.8",

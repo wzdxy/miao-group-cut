@@ -6,7 +6,8 @@
   </head>
   <body>
     <div id="app">
-        <label for="img-pick"></label><input type="file" multiple name="img-pick" @change='inputChange'>
+      <label for="img-pick"></label><input type="file" multiple name="img-pick" @change='inputChange'>
+      <button @click="cutByBox" style="padding: 10px">裁切</button>
       <div class="pic-list">
         <div class="pic-item" v-for="(item, idx) in viewPicList" ref="picItem"
           @mousemove="dragCutBox(item, idx, $event)"
@@ -19,6 +20,7 @@
             <span class="size-handle-4" @mousedown="startResize(4, $event)"></span>
           </div>
         </div>
+        <h3 v-show="!viewPicList.length">请点击上方"选择文件"打开多张相同尺寸的图片</h3>
       </div>
     </div>
     <script src="./index.js"></script>

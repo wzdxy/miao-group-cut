@@ -1,7 +1,8 @@
 const { remote } = require('electron')
 const fs = require('fs')
 const path = require('path')
-const { info, convert } = require('easyimage')
+const shell = require('electron').shell
+const { info, convert, crop } = require('easyimage')
 const Vue = require('vue/dist/vue.common.dev')
 // 临时文件目录
 const appData = remote.app.getPath('userData')
@@ -19,7 +20,7 @@ window.vm = new Vue({
     outputPath: path.resolve(tempPath, 'output'),
     rawPicList: [],// 原始图片(tif格式)
     viewPicList:[
-      {"density":{"x":300,"y":300},"depth":8,"frames":1,"height":241,"name":"1.jpg","orientation":"Undefined","path":"C:\\Users\\zchi\\AppData\\Roaming\\miao-group-cut\\temp\\view\\2.jpg","size":57554,"type":"jpeg","width":300}
+      // {"density":{"x":300,"y":300},"depth":8,"frames":1,"height":241,"name":"1.jpg","orientation":"Undefined","path":"C:\\Users\\zchi\\AppData\\Roaming\\miao-group-cut\\temp\\view\\2.jpg","size":57554,"type":"jpeg","width":300}
     ],// 展示用的(jpg)
     outputPicList: [],// 处理后的图片
     dragging: false,
@@ -32,11 +33,15 @@ window.vm = new Vue({
     cutBox: {
       x: 0,
       y: 0,
-      w: 100,
+      w: 200,
       h: 100,
     }
   },
   methods: {
+    /**
+     * 打开多个文件
+     * @param {*} e 事件对象
+     */
     async inputChange(e) {
       console.log(e.target.files)
       if (!fs.existsSync(this.rawPath)) {
@@ -62,7 +67,7 @@ window.vm = new Vue({
         const parent = this.$refs.picItem[idx]
         this.cutBox.x = e.pageX - parent.offsetLeft - this.cutBox.w/2
         this.cutBox.y = e.pageY - parent.offsetTop - this.cutBox.h/2
-        console.log(this.cutBox.x, this.cutBox.y)
+        // console.log(this.cutBox.x, this.cutBox.y)
       } else if (this.resizing) {
         e.preventDefault()
         const changeX = e.x - this.resizeStart.x
@@ -96,21 +101,35 @@ window.vm = new Vue({
         this.resizeStart.y = e.y
       }
     },
+    /**
+     * 拖拽裁切框结束
+     */
     stopDrag() {
       this.dragging = false
       window.removeEventListener('mouseup', this.stopDrag)
       console.log('结束拖拽')
     },
+    /**
+     * 调整锚点结束
+     */
     stopResizing() {
       this.resizing = false
       window.removeEventListener('mouseup', this.stopResizing)
       console.log('结束调整位置')
     },
+    /**
+     * 开始拖拽裁切框位置
+     */
     startDrag() {
       window.addEventListener('mouseup', this.stopDrag)
       this.dragging = true
       console.log('开始拖拽')
     },
+    /**
+     * 开始拖拽锚点时
+     * @param {*} position 锚点的位置 1左上 2右上 3右下 4左下
+     * @param {*} e 事件对象
+     */
     startResize(position, e) {
       e.stopPropagation()
       window.addEventListener('mouseup', this.stopResizing)
@@ -119,6 +138,29 @@ window.vm = new Vue({
       this.resizeStart.x = e.x
       this.resizeStart.y = e.y
       console.log('开始调整', e.x, e.y)
+    },
+    /**
+     * 根据框选的范围裁切
+     */
+    cutByBox() {
+      if(!fs.existsSync(this.outputPath)) fs.mkdirSync(this.outputPath)
+      this.rawPicList.forEach((item, idx) => {
+        let imageOutPath = path.resolve(this.outputPath, item.name)
+        let resizeRatio = this.$refs.picItem[idx].offsetWidth / item.width // 和真实显示的缩放比例
+        crop({
+          x: this.cutBox.x / resizeRatio,
+          y: this.cutBox.y / resizeRatio,
+          cropheight: this.cutBox.h / resizeRatio,
+          cropwidth: this.cutBox.w / resizeRatio,
+          src: item.path,
+          dst: imageOutPath
+        }).then(() => {
+          if (idx === this.rawPicList.length - 1) {
+            shell.showItemInFolder(imageOutPath)
+          }
+        })
+
+      })
     }
   },
   mounted() {
